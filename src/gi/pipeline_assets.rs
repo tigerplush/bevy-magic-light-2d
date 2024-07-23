@@ -160,7 +160,7 @@ pub fn system_extract_pipeline_assets(
     {
         if let Ok((camera, camera_global_transform)) = query_camera.get_single() {
             let camera_params = gpu_pipeline_assets.camera_params.get_mut();
-            let projection = camera.projection_matrix();
+            let projection = camera.clip_from_view();
             let inverse_projection = projection.inverse();
             let view = camera_global_transform.compute_matrix();
             let inverse_view = view.inverse();
@@ -209,9 +209,10 @@ pub fn system_extract_pipeline_assets(
         let light_pass_params = gpu_pipeline_assets.light_pass_params.get_mut();
         light_pass_params.skylight_color = Vec3::splat(0.0);
         for new_gi_state in query_skylight_light.iter() {
-            light_pass_params.skylight_color.x += new_gi_state.color.r() * new_gi_state.intensity;
-            light_pass_params.skylight_color.y += new_gi_state.color.g() * new_gi_state.intensity;
-            light_pass_params.skylight_color.z += new_gi_state.color.b() * new_gi_state.intensity;
+            let color = new_gi_state.color.to_srgba();
+            light_pass_params.skylight_color.x += color.red * new_gi_state.intensity;
+            light_pass_params.skylight_color.y += color.green * new_gi_state.intensity;
+            light_pass_params.skylight_color.z += color.blue * new_gi_state.intensity;
         }
     }
 
